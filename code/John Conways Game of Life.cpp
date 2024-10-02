@@ -1,7 +1,7 @@
 /*
 Author: Rui Wang
 Class: ECE6122
-Last Date Modified: Oct 1st 2024
+Last Date Modified: Oct 2nd 2024
 Description:
 Apply the principles of multithreading using std::thread and OpenMP for parallel
 calculations in a computationally-intensive problem related playing John Conway¡¯s Game of Life.
@@ -17,6 +17,12 @@ calculations in a computationally-intensive problem related playing John Conway¡
 #include <SFML/Graphics.hpp>
 #include <omp.h>	// OpenMP 
 
+#define DEFAULT_NUM_OF_THREAD 8
+#define DEFAULT_WINDOW_WEIGHT 800
+#define DEFAULT_WINDOW_HEIGHT 600
+#define DEFAULT_CELL_SIZE 5
+#define RAND_SEED 42
+
 enum class ExecutionType
 {
 	SEQ = 0,
@@ -24,10 +30,10 @@ enum class ExecutionType
 	OMP = 2
 };
 
-int numOfThread = 8;
-int windowWeight = 800;
-int windowHeight = 600;
-int cellSize = 5;
+int numOfThread = DEFAULT_NUM_OF_THREAD;
+int windowWeight = DEFAULT_WINDOW_WEIGHT;
+int windowHeight = DEFAULT_WINDOW_HEIGHT;
+int cellSize = DEFAULT_CELL_SIZE;
 ExecutionType executionType = ExecutionType::THRD;
 
 std::vector<std::vector<sf::RectangleShape>>  twoDimensionalGrid;
@@ -145,7 +151,7 @@ int main(int argc, char** args)
 			}
 			if (numOfThread < 2) {
 				std::cout << "The number of threads must be larger than 2" << std::endl;
-				numOfThread = 8;
+				numOfThread = DEFAULT_NUM_OF_THREAD;
 			}
 		}
 		else if (argKey == "-c" && !argValue.empty()) {
@@ -160,7 +166,7 @@ int main(int argc, char** args)
 			}
 			if (cellSize < 1) {
 				std::cout << "Cell size must be larger than or equal to 1" << std::endl;
-				cellSize = 5;
+				cellSize = DEFAULT_CELL_SIZE;
 			}
 		}
 		else if (argKey == "-x" && !argValue.empty()) {
@@ -175,7 +181,7 @@ int main(int argc, char** args)
 			}
 			if (windowWeight < 1) {
 				std::cout << "Winodw weight mush be larger than or equal to 1" << std::endl;
-				windowWeight = 800;
+				windowWeight = DEFAULT_WINDOW_WEIGHT;
 			}
 		}
 		else if (argKey == "-y" && !argValue.empty()) {
@@ -190,7 +196,7 @@ int main(int argc, char** args)
 			}
 			if (windowHeight < 1) {
 				std::cout << "Winodw height mush be larger than or equal to 1" << std::endl;
-				windowHeight = 600;
+				windowHeight = DEFAULT_WINDOW_HEIGHT;
 			}
 		}
 		else if (argKey == "-t" && !argValue.empty()) {
@@ -205,6 +211,7 @@ int main(int argc, char** args)
 			}
 			else {
 				std::cout << "Invalid argument (-t): select a type from SEQ, THRD and OMP" << std::endl;
+				executionType = ExecutionType::THRD;
 			}
 		}
 	}
@@ -221,7 +228,7 @@ int main(int argc, char** args)
 	sprite.setPosition(0, 0);
 
 	// Srand initialization
-	std::srand(42);			// std::srand(static_cast<unsigned>(std::time(0)));
+	std::srand(RAND_SEED);			// std::srand(static_cast<unsigned>(std::time(0)));
 	for (int i = 0; i < windowWeight; i += cellSize) {
 		std::vector<sf::RectangleShape> columns;
 		for (int j = 0; j < windowHeight; j += cellSize) {
@@ -232,7 +239,7 @@ int main(int argc, char** args)
 		}
 		twoDimensionalGrid.push_back(columns);
 	}
-	// Copy newGrid from twoDimensionalGrid
+	// Deep copy newGrid from twoDimensionalGrid
 	newGrid = twoDimensionalGrid;
 
 	// Count the generation iteration and time
@@ -267,7 +274,7 @@ int main(int argc, char** args)
 		else {
 			openMPGridUpdate();				// OpenMP update grid
 		}
-		// Update two DimensionalGrid after a generation
+		// Update twoDimensionalGrid after a generation
 		twoDimensionalGrid = newGrid;
 
 		// One generation finishes
