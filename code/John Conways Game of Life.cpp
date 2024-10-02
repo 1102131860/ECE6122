@@ -129,9 +129,6 @@ void openMPGridUpdate() {
 int main(int argc, char** args)
 {
 	// Obtain through arguments
-	/*
-	*	need argument validation checking
-	*/
 	for (int i = 1; i < argc; i+=2) {
 		std::string argKey = args[i];
 		std::string argValue = (i + 1 < argc) ? args[i + 1] : "";
