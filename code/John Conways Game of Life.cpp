@@ -1,4 +1,12 @@
-// Include important C++ libraries here
+/*
+Author: Rui Wang
+Class: ECE6122
+Last Date Modified: Oct 1st 2024
+Description:
+Apply the principles of multithreading using std::thread and OpenMP for parallel
+calculations in a computationally-intensive problem related playing John Conway¡¯s Game of Life.
+*/
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -6,11 +14,8 @@
 #include <cstdlib>  // For rand() and srand()
 #include <chrono>	// For time functions
 #include <thread>	// For thread and thread pool
-#include <mutex>	// For lock_guard and mutex
 #include <SFML/Graphics.hpp>
-
-// Make code easier to type with "using namespace"
-using namespace sf;
+#include <omp.h>	// OpenMP 
 
 enum class ExecutionType
 {
@@ -22,13 +27,11 @@ enum class ExecutionType
 int numOfThread = 8;
 int windowWeight = 800;
 int windowHeight = 600;
-int cellSize = 5;			// denote the ¡°cell size¡± with cells being square (c >=1)
+int cellSize = 5;
 ExecutionType executionType = ExecutionType::THRD;
 
-std::mutex mtx;				// Mutex for thread synchronization
-
 std::vector<std::vector<sf::RectangleShape>>  twoDimensionalGrid;
-std::vector<std::vector<sf::RectangleShape>>  newGrid;			// newGrid will update twoDimensionalGrid after one round of generation
+std::vector<std::vector<sf::RectangleShape>>  newGrid;
 
 void updateGrid(sf::RectangleShape& grid) {
 	int numoOfLiveNeighbour = 0;
@@ -79,9 +82,6 @@ void sequentiallyGridUpdate() {
 			updateGrid(grid);
 		}
 	}
-
-	// Update two DimensionalGrid after a generation
-	twoDimensionalGrid = newGrid;
 }
 
 void threadGridUpdateWithChunk(int start, int end) {
@@ -110,30 +110,91 @@ void threadGridUpdate() {
 	for (auto& thread : threadPool) {
 		thread.join();
 	}
+}
 
-	// Copy updated values back to the main array 
-	std::lock_guard<std::mutex> lock(mtx); // Protect the shared resource during the copy
-	twoDimensionalGrid = newGrid;
+void openMPGridUpdate() {
+	int columnLength = windowWeight / cellSize;
+	int rowLength = windowHeight / cellSize;
+	#pragma omp parallel num_threads(numOfThread)
+	{
+		#pragma omp for
+		for (int i = 0; i < columnLength; i++) {
+			for (int j = 0; j < rowLength; j++) {
+				updateGrid(newGrid[i][j]);
+			}
+		}
+	}
 }
 
 int main(int argc, char** args)
 {
 	// Obtain through arguments
+	/*
+	*	need argument validation checking
+	*/
 	for (int i = 1; i < argc; i+=2) {
 		std::string argKey = args[i];
 		std::string argValue = (i + 1 < argc) ? args[i + 1] : "";
 
 		if (argKey == "-n" && !argValue.empty()) {
-			numOfThread = std::stoi(argValue);
+			try {
+				numOfThread = std::stoi(argValue);
+			}
+			catch (const std::invalid_argument& e) {
+				std::cout << "Invalid argument (-n): " << e.what() << std::endl;
+			}
+			catch (const std::out_of_range& e) {
+				std::cout << "Out of range (-n): " << e.what() << std::endl;
+			}
+			if (numOfThread < 2) {
+				std::cout << "The number of threads must be larger than 2" << std::endl;
+				numOfThread = 8;
+			}
 		}
 		else if (argKey == "-c" && !argValue.empty()) {
-			cellSize = std::stoi(argValue);
+			try {
+				cellSize = std::stoi(argValue);
+			}
+			catch (const std::invalid_argument& e) {
+				std::cout << "Invalid argument (-c): " << e.what() << std::endl;
+			}
+			catch (const std::out_of_range& e) {
+				std::cout << "Out of range (-c): " << e.what() << std::endl;
+			}
+			if (cellSize < 1) {
+				std::cout << "Cell size must be larger than or equal to 1" << std::endl;
+				cellSize = 5;
+			}
 		}
 		else if (argKey == "-x" && !argValue.empty()) {
-			windowWeight = std::stoi(argValue);
+			try {
+				windowWeight = std::stoi(argValue);
+			}
+			catch (const std::invalid_argument& e) {
+				std::cout << "Invalid argument (-x): " << e.what() << std::endl;
+			}
+			catch (const std::out_of_range& e) {
+				std::cout << "Out of range (-x): " << e.what() << std::endl;
+			}
+			if (windowWeight < 1) {
+				std::cout << "Winodw weight mush be larger than or equal to 1" << std::endl;
+				windowWeight = 800;
+			}
 		}
 		else if (argKey == "-y" && !argValue.empty()) {
-			windowHeight = std::stoi(argValue);
+			try {
+				windowHeight = std::stoi(argValue);
+			}
+			catch (const std::invalid_argument& e) {
+				std::cout << "Invalid argument (-y): " << e.what() << std::endl;
+			}
+			catch (const std::out_of_range& e) {
+				std::cout << "Out of range (-y): " << e.what() << std::endl;
+			}
+			if (windowHeight < 1) {
+				std::cout << "Winodw height mush be larger than or equal to 1" << std::endl;
+				windowHeight = 600;
+			}
 		}
 		else if (argKey == "-t" && !argValue.empty()) {
 			if (argValue == "SEQ") {
@@ -142,8 +203,11 @@ int main(int argc, char** args)
 			else if (argValue == "THRD") {
 				executionType = ExecutionType::THRD;
 			}
-			else if (argValue == "OPT") {
+			else if (argValue == "OMP") {
 				executionType = ExecutionType::OMP;
+			}
+			else {
+				std::cout << "Invalid argument (-t): select a type from SEQ, THRD and OMP" << std::endl;
 			}
 		}
 	}
@@ -160,7 +224,7 @@ int main(int argc, char** args)
 	sprite.setPosition(0, 0);
 
 	// Srand initialization
-	std::srand(static_cast<unsigned>(std::time(0)));
+	std::srand(42);			// std::srand(static_cast<unsigned>(std::time(0)));
 	for (int i = 0; i < windowWeight; i += cellSize) {
 		std::vector<sf::RectangleShape> columns;
 		for (int j = 0; j < windowHeight; j += cellSize) {
@@ -186,7 +250,7 @@ int main(int argc, char** args)
 			if (event.type == sf::Event::Closed)
 				window.close();
 		}
-
+		// If press esc, window exits
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
 			window.close();
 		}
@@ -196,12 +260,18 @@ int main(int argc, char** args)
 			start = std::chrono::high_resolution_clock::now();
 		}
 
+		// Update newGrid with different types
 		if (executionType == ExecutionType::SEQ) {
 			sequentiallyGridUpdate();		// Sequentially update grid
 		}
 		else if (executionType == ExecutionType::THRD) {
 			threadGridUpdate();				// Thread update grid
-		}		
+		}
+		else {
+			openMPGridUpdate();				// OpenMP update grid
+		}
+		// Update two DimensionalGrid after a generation
+		twoDimensionalGrid = newGrid;
 
 		// One generation finishes
 		count++;
@@ -212,15 +282,14 @@ int main(int argc, char** args)
 			// Calculate the duration in microseconds
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 			if (executionType == ExecutionType::SEQ) {
-				std::cout << count << " generations took " << duration << " microseconds with single thread" << std::endl;
+				std::cout << "(Total generations: " << count << ") 100 generations took " << duration << " microseconds with single thread" << std::endl;
 			}
 			else if (executionType == ExecutionType::THRD) {
-				std::cout << count << " generations took " << duration << " microseconds with " << numOfThread << " std::threads" << std::endl;
+				std::cout << "(Total generations: " << count << ") 100 generations took " << duration << " microseconds with " << numOfThread << " std::threads" << std::endl;
 			}
 			else {
-				std::cout << count << " generations took " << duration << " microseconds with " << numOfThread << " OMP threads" << std::endl;
+				std::cout << "(Total generations: " << count << ") 100 generations took " << duration << " microseconds with " << numOfThread << " OMP threads" << std::endl;
 			}
-			
 		}
 
 		// Draw the graph
