@@ -8,7 +8,7 @@ project(Lab2 VERSION 1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-# set(OPENAL_LIBRARY ${PROJECT_SOURCE_DIR}/../SFML/extlibs/libs-msvc/x64/openal32.lib)
+set(OPENAL_LIBRARY ${PROJECT_SOURCE_DIR}/../SFML/extlibs/libs-msvc/x64/openal32.lib)
 
 # Add source files
 file(GLOB SOURCES 
@@ -18,6 +18,13 @@ file(GLOB SOURCES
 # Add the executable
 add_executable(Lab2 ${SOURCES})
 
+# Find and link OpenMP
+find_package(OpenMP REQUIRED)
+if (OpenMP_CXX_FOUND)
+    target_link_libraries(Lab2 PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
+# Include SFML headers
 include_directories(${PROJECT_SOURCE_DIR}/../SFML/include)
 
 link_directories(${PROJECT_SOURCE_DIR}/../SFML/lib)

@@ -10,12 +10,12 @@ calculations in a computationally-intensive problem related playing John Conway¡
 #include <iostream>
 #include <string>
 #include <vector>
-#include <ctime>    // For time()
-#include <cstdlib>  // For rand() and srand()
-#include <chrono>	// For time functions
-#include <thread>	// For thread and thread pool
-#include <SFML/Graphics.hpp>
-#include <omp.h>	// OpenMP 
+#include <ctime>
+#include <cstdlib>
+#include <chrono>
+#include <thread>
+#include <SFML/Graphics.hpp>	// SFML
+#include <omp.h>				// OpenMP 
 
 #define DEFAULT_NUM_OF_THREAD 8
 #define DEFAULT_WINDOW_WEIGHT 800
@@ -30,86 +30,86 @@ enum class ExecutionType
 	OMP = 2
 };
 
+typedef struct {
+	bool pastIsLive;
+	bool nowIsLive;
+} Grid;
+
 int numOfThread = DEFAULT_NUM_OF_THREAD;
 int windowWeight = DEFAULT_WINDOW_WEIGHT;
 int windowHeight = DEFAULT_WINDOW_HEIGHT;
 int cellSize = DEFAULT_CELL_SIZE;
 ExecutionType executionType = ExecutionType::THRD;
 
-std::vector<std::vector<sf::RectangleShape>>  twoDimensionalGrid;
-std::vector<std::vector<sf::RectangleShape>>  newGrid;
+std::vector<std::vector<Grid>> twoDimenGrid;
+std::vector<std::vector<sf::RectangleShape>>  twoDimenSquare;
 
-void updateGrid(sf::RectangleShape& grid) {
-	int numoOfLiveNeighbour = 0;
-	int columnLength = windowWeight / cellSize;
-	int rowLength = windowHeight / cellSize;
-	int column = static_cast<int>(grid.getPosition().x) / cellSize;
-	int row = static_cast<int>(grid.getPosition().y) / cellSize;
+void updateSingleGrid(Grid& grid, int column, int row, int columnLength, int rowLength) {
+	int numOfLiveNeighbour = 0;
 
-	if (column - 1 >= 0 && row - 1 >= 0 && twoDimensionalGrid[column - 1][row - 1].getFillColor() == sf::Color::White) {
-		numoOfLiveNeighbour++;		// left up corner exists and is live
+	if (column - 1 >= 0 && row - 1 >= 0 && twoDimenGrid[column - 1][row - 1].pastIsLive) {
+		numOfLiveNeighbour++;		// left up corner exists and is live
 	}
-	if (column - 1 >= 0 && row + 1 < rowLength && twoDimensionalGrid[column - 1][row + 1].getFillColor() == sf::Color::White) {
-		numoOfLiveNeighbour++;		// left down corner exists and is live
+	if (column - 1 >= 0 && row + 1 < rowLength && twoDimenGrid[column - 1][row + 1].pastIsLive) {
+		numOfLiveNeighbour++;		// left down corner exists and is live
 	}
-	if (column + 1 < columnLength && row - 1 >= 0 && twoDimensionalGrid[column + 1][row - 1].getFillColor() == sf::Color::White) {
-		numoOfLiveNeighbour++;		// right up corner exists and is live
+	if (column + 1 < columnLength && row - 1 >= 0 && twoDimenGrid[column + 1][row - 1].pastIsLive) {
+		numOfLiveNeighbour++;		// right up corner exists and is live
 	}
-	if (column + 1 < columnLength && row + 1 < rowLength && twoDimensionalGrid[column + 1][row + 1].getFillColor() == sf::Color::White) {
-		numoOfLiveNeighbour++;		// right down corner exits and is live
+	if (column + 1 < columnLength && row + 1 < rowLength && twoDimenGrid[column + 1][row + 1].pastIsLive) {
+		numOfLiveNeighbour++;		// right down corner exits and is live
 	}
-	if (column - 1 >= 0 && twoDimensionalGrid[column - 1][row].getFillColor() == sf::Color::White) {
-		numoOfLiveNeighbour++;		// left grid exists and is live
+	if (column - 1 >= 0 && twoDimenGrid[column - 1][row].pastIsLive) {
+		numOfLiveNeighbour++;		// left grid exists and is live
 	}
-	if (column + 1 < columnLength && twoDimensionalGrid[column + 1][row].getFillColor() == sf::Color::White) {
-		numoOfLiveNeighbour++;		// right grid exits and is live
+	if (column + 1 < columnLength && twoDimenGrid[column + 1][row].pastIsLive) {
+		numOfLiveNeighbour++;		// right grid exits and is live
 	}
-	if (row - 1 >= 0 && twoDimensionalGrid[column][row - 1].getFillColor() == sf::Color::White) {
-		numoOfLiveNeighbour++;		// up grid exits and is live
+	if (row - 1 >= 0 && twoDimenGrid[column][row - 1].pastIsLive) {
+		numOfLiveNeighbour++;		// up grid exits and is live
 	}
-	if (row + 1 < rowLength && twoDimensionalGrid[column][row + 1].getFillColor() == sf::Color::White) {
-		numoOfLiveNeighbour++;		// down grid exits and is live
+	if (row + 1 < rowLength && twoDimenGrid[column][row + 1].pastIsLive) {
+		numOfLiveNeighbour++;		// down grid exits and is live
 	}
-	
+
 	// if it is live and number of neighbours is not 2 or 3, then change to dead
-	if (grid.getFillColor() == sf::Color::White && numoOfLiveNeighbour != 2 && numoOfLiveNeighbour != 3) {
-		grid.setFillColor(sf::Color::Black);
+	if (grid.pastIsLive && numOfLiveNeighbour != 2 && numOfLiveNeighbour != 3) {
+		grid.nowIsLive = false;
 	}
 	// if it is dead and number of neighbours is 3, then change to live
-	if (grid.getFillColor() == sf::Color::Black && numoOfLiveNeighbour == 3) {
-		grid.setFillColor(sf::Color::White);
+	if (!grid.pastIsLive && numOfLiveNeighbour == 3) {
+		grid.nowIsLive = true;
 	}
 }
 
-void sequentiallyGridUpdate() {
-	// Update the new Grid accodring to the original twoDimensionalGrid
-	for (auto& column : newGrid) {
-		for (auto& grid : column) {
-			updateGrid(grid);
+void sequentiallyGridUpdate(int columnLength, int rowLength) {
+	// Update the grid Sequentially
+	for (int i = 0; i < columnLength; i++) {
+		for (int j = 0; j < rowLength; j++) {
+			updateSingleGrid(twoDimenGrid[i][j], i, j, columnLength, rowLength);
 		}
 	}
 }
 
-void threadGridUpdateWithChunk(int start, int end) {
-	int rowLength = windowHeight / cellSize;
+void threadUpdateGridWithChunk(int start, int end, int columnLength, int rowLength) {
+	// Update the grid by chunk
 	for (int i = start; i < end; i++) {
 		for (int j = 0; j < rowLength; j++) {
-			updateGrid(newGrid[i][j]);
+			updateSingleGrid(twoDimenGrid[i][j], i, j, columnLength, rowLength);
 		}
 	}
 }
 
-void threadGridUpdate() {
+void threadGridUpdate(int columnLength, int rowLength) {
 	// Create thread pool
-	std::vector<std::thread> threadPool;
-	int columnLength = windowWeight / cellSize;
 	int chunkSize = columnLength / numOfThread;
+	std::vector<std::thread> threadPool;
 
 	// Divide the work into chunks and assign each chunk to a thread
 	for (int i = 0; i < numOfThread; i++) {
 		int start = i * chunkSize;
-		int end = (i == numOfThread - 1) ? columnLength : start + chunkSize;	// Handle last chunk
-		threadPool.push_back(std::thread(threadGridUpdateWithChunk, start, end));
+		int end = (i == numOfThread - 1) ? columnLength : start + chunkSize;
+		threadPool.push_back(std::thread(threadUpdateGridWithChunk, start, end, columnLength, rowLength));
 	}
 
 	// Join threads
@@ -118,15 +118,14 @@ void threadGridUpdate() {
 	}
 }
 
-void openMPGridUpdate() {
-	int columnLength = windowWeight / cellSize;
-	int rowLength = windowHeight / cellSize;
-	#pragma omp parallel for schedule(dynamic) num_threads(numOfThread) private(i, j)
+void openMPGridUpdate(int columnLength, int rowLength) {
+	// OpenMP parallel for loop
+#pragma omp parallel num_threads(numOfThread) 
 	{
-		#pragma omp for
+#pragma omp for
 		for (int i = 0; i < columnLength; i++) {
 			for (int j = 0; j < rowLength; j++) {
-				updateGrid(newGrid[i][j]);
+				updateSingleGrid(twoDimenGrid[i][j], i, j, columnLength, rowLength);
 			}
 		}
 	}
@@ -135,7 +134,7 @@ void openMPGridUpdate() {
 int main(int argc, char** args)
 {
 	// Obtain through arguments
-	for (int i = 1; i < argc; i+=2) {
+	for (int i = 1; i < argc; i += 2) {
 		std::string argKey = args[i];
 		std::string argValue = (i + 1 < argc) ? args[i + 1] : "";
 
@@ -215,33 +214,36 @@ int main(int argc, char** args)
 			}
 		}
 	}
-	std::cout << "numOfThread: " << numOfThread << " cellSize: " << cellSize << " windowWeight: " << windowWeight << " windowHeight: " << windowHeight 
-		<< " execuationType: "  << (executionType == ExecutionType::SEQ ? "SEQ" : (executionType == ExecutionType::THRD ? "THRD" : "OMP")) << std::endl;
+	std::cout << "numOfThread: " << numOfThread << " cellSize: " << cellSize << " windowWeight: "
+		<< windowWeight << " windowHeight: " << windowHeight << " execuationType: "
+		<< (executionType == ExecutionType::SEQ ? "SEQ" : (executionType == ExecutionType::THRD ? "THRD" : "OMP"))
+		<< std::endl;
 
 	// Create a window
-	sf::RenderWindow window(sf::VideoMode(windowWeight, windowHeight), "John Conway¡¯s Game of Life");
-
-	// Create a sprite and set the texture
-	sf::Sprite sprite;
-
-	// Set the position of the sprite to the target rectangle's position
-	sprite.setPosition(0, 0);
+	sf::RenderWindow window(sf::VideoMode(windowWeight, windowHeight), "John Conway\'s Game of Life");
 
 	// Srand initialization
 	std::srand(RAND_SEED);			// std::srand(static_cast<unsigned>(std::time(0)));
 	for (int i = 0; i < windowWeight; i += cellSize) {
-		std::vector<sf::RectangleShape> columns;
+		std::vector<Grid> gridColumn;
+		std::vector<sf::RectangleShape> squareColumn;
 		for (int j = 0; j < windowHeight; j += cellSize) {
-			sf::RectangleShape grid(sf::Vector2f(static_cast<float>(cellSize), static_cast<float>(cellSize)));
-			grid.setPosition(static_cast<float>(i), static_cast<float>(j));
-			grid.setFillColor(rand() % 2 ? sf::Color::White : sf::Color::Black);
-			columns.push_back(grid);
-		}
-		twoDimensionalGrid.push_back(columns);
-	}
-	// Deep copy newGrid from twoDimensionalGrid
-	newGrid = twoDimensionalGrid;
+			Grid newGrid;
+			newGrid.nowIsLive = newGrid.pastIsLive = rand() % 2;
+			gridColumn.push_back(newGrid);
 
+			sf::RectangleShape square(sf::Vector2f(static_cast<float>(cellSize), static_cast<float>(cellSize)));
+			square.setPosition(static_cast<float>(i), static_cast<float>(j));
+			square.setFillColor(sf::Color::White);
+			squareColumn.push_back(square);
+		}
+		twoDimenGrid.push_back(gridColumn);
+		twoDimenSquare.push_back(squareColumn);
+	}
+
+	// Grid size
+	int columnLength = windowWeight / cellSize;
+	int rowLength = windowHeight / cellSize;
 	// Count the generation iteration and time
 	int count = 0;
 	std::chrono::time_point<std::chrono::high_resolution_clock> start;
@@ -263,46 +265,52 @@ int main(int argc, char** args)
 		// Update newGrid with different types
 		start = std::chrono::high_resolution_clock::now();
 		if (executionType == ExecutionType::SEQ) {
-			sequentiallyGridUpdate();		// Sequentially update grid
+			sequentiallyGridUpdate(columnLength, rowLength);		// Sequentially update grid
 		}
 		else if (executionType == ExecutionType::THRD) {
-			threadGridUpdate();				// Thread update grid
+			threadGridUpdate(columnLength, rowLength);				// Thread update grid
 		}
 		else {
-			openMPGridUpdate();				// OpenMP update grid
+			openMPGridUpdate(columnLength, rowLength);				// OpenMP update grid
 		}
 		// Record acculumated time
 		end = std::chrono::high_resolution_clock::now();
 		duration += std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-		// Update twoDimensionalGrid after a generation
-		twoDimensionalGrid = newGrid;
+
+		// Update grid after a generation
+		for (auto& col : twoDimenGrid) {
+			for (auto& e : col) {
+				e.pastIsLive = e.nowIsLive;
+			}
+		}
 
 		// One generation finishes
 		count++;
-	    // Output the execution time
+		// Output the execution time
 		if (count % 100 == 0) {
 			if (executionType == ExecutionType::SEQ) {
-				std::cout << "(Total generations: " << count << ") 100 generations took " << duration << " microseconds with single thread" << std::endl;
+				std::cout << "(Total generations: " << count << ") 100 generations took " << duration
+					<< " microseconds with single thread" << std::endl;
 			}
 			else if (executionType == ExecutionType::THRD) {
-				std::cout << "(Total generations: " << count << ") 100 generations took " << duration << " microseconds with " << numOfThread << " std::threads" << std::endl;
+				std::cout << "(Total generations: " << count << ") 100 generations took " << duration
+					<< " microseconds with " << numOfThread << " std::threads" << std::endl;
 			}
 			else {
-				std::cout << "(Total generations: " << count << ") 100 generations took " << duration << " microseconds with " << numOfThread << " OMP threads" << std::endl;
+				std::cout << "(Total generations: " << count << ") 100 generations took "
+					<< duration << " microseconds with " << numOfThread << " OMP threads" << std::endl;
 			}
-
 			// Clear up duration for next 100 generations
 			duration = 0;
 		}
 
 		// Draw the graph
 		window.clear(sf::Color::Black);
-		window.draw(sprite);
 		// draw
-		for (auto& column : twoDimensionalGrid) {
-			for (auto& grid : column) {
-				if (grid.getFillColor() == sf::Color::White) {
-					window.draw(grid);
+		for (int i = 0; i < columnLength; i++) {
+			for (int j = 0; j < rowLength; j++) {
+				if (twoDimenGrid[i][j].nowIsLive) {
+					window.draw(twoDimenSquare[i][j]);
 				}
 			}
 		}
