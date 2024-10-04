@@ -1,7 +1,7 @@
 /*
 Author: Rui Wang
 Class: ECE6122
-Last Date Modified: Oct 2nd 2024
+Last Date Modified: Oct 4th 2024
 Description:
 Apply the principles of multithreading using std::thread and OpenMP for parallel
 calculations in a computationally-intensive problem related playing John Conway¡¯s Game of Life.
@@ -121,7 +121,7 @@ void threadGridUpdate() {
 void openMPGridUpdate() {
 	int columnLength = windowWeight / cellSize;
 	int rowLength = windowHeight / cellSize;
-	#pragma omp parallel num_threads(numOfThread)
+	#pragma omp parallel for schedule(dynamic) num_threads(numOfThread) private(i, j)
 	{
 		#pragma omp for
 		for (int i = 0; i < columnLength; i++) {
@@ -246,6 +246,7 @@ int main(int argc, char** args)
 	int count = 0;
 	std::chrono::time_point<std::chrono::high_resolution_clock> start;
 	std::chrono::time_point<std::chrono::high_resolution_clock> end;
+	long long duration = 0;
 
 	// Main loop
 	while (window.isOpen()) {
@@ -259,12 +260,8 @@ int main(int argc, char** args)
 			window.close();
 		}
 
-		// Start counting time
-		if (count % 100 == 0) {
-			start = std::chrono::high_resolution_clock::now();
-		}
-
 		// Update newGrid with different types
+		start = std::chrono::high_resolution_clock::now();
 		if (executionType == ExecutionType::SEQ) {
 			sequentiallyGridUpdate();		// Sequentially update grid
 		}
@@ -274,6 +271,9 @@ int main(int argc, char** args)
 		else {
 			openMPGridUpdate();				// OpenMP update grid
 		}
+		// Record acculumated time
+		end = std::chrono::high_resolution_clock::now();
+		duration += std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 		// Update twoDimensionalGrid after a generation
 		twoDimensionalGrid = newGrid;
 
@@ -281,10 +281,6 @@ int main(int argc, char** args)
 		count++;
 	    // Output the execution time
 		if (count % 100 == 0) {
-			// Record the end time
-			end = std::chrono::high_resolution_clock::now();
-			// Calculate the duration in microseconds
-			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 			if (executionType == ExecutionType::SEQ) {
 				std::cout << "(Total generations: " << count << ") 100 generations took " << duration << " microseconds with single thread" << std::endl;
 			}
@@ -294,6 +290,9 @@ int main(int argc, char** args)
 			else {
 				std::cout << "(Total generations: " << count << ") 100 generations took " << duration << " microseconds with " << numOfThread << " OMP threads" << std::endl;
 			}
+
+			// Clear up duration for next 100 generations
+			duration = 0;
 		}
 
 		// Draw the graph
