@@ -1,0 +1,28 @@
+#version 330 core
+
+layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 1) in vec2 vertexUV;
+layout(location = 2) in vec3 vertexNormal_modelspace;
+
+out vec3 FragPos;         // Position of the fragment (to the fragment shader)
+out vec3 Normal;          // Normal vector (to the fragment shader)
+out vec2 UV;              // UV coordinates (to the fragment shader)
+
+// Uniforms for transformations
+uniform mat4 MVP;         // Model-View-Projection matrix
+uniform mat4 V;           // View matrix
+uniform mat4 M;           // Model matrix
+
+void main() {
+    // Compute the fragment's position in world space
+    FragPos = vec3(M * vec4(vertexPosition_modelspace, 1.0));
+    
+    // Normal in world coordinates
+    Normal = mat3(transpose(inverse(M))) * vertexNormal_modelspace;
+    
+    // UV coordinates passed along
+    UV = vertexUV;
+
+    // Output position of the fragment (in clip space)
+    gl_Position = MVP * vec4(vertexPosition_modelspace, 1.0);
+}

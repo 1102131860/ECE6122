@@ -1,0 +1,100 @@
+#
+#
+#
+
+newmtl ALFIERE02 网格_wooddark3
+illum 2
+Ka 0.000000 0.000000 0.000000
+Kd 0.161551 0.041366 0.002207
+Ks 0.623529 0.639216 0.560784
+Ns 4.737720
+map_Kd wooddar3.bmp
+
+newmtl ALFIERE3 网格_woodlight3
+illum 2
+Ka 0.000000 0.000000 0.000000
+Kd 0.646162 0.565369 0.434441
+Ks 0.623529 0.639216 0.560784
+Ns 37.007099
+map_Kd woodlig3.bmp
+
+newmtl Object02 网格_wooddark2
+illum 2
+Ka 0.000000 0.000000 0.000000
+Kd 0.161551 0.041366 0.002207
+Ks 0.623529 0.639216 0.560784
+Ns 4.737720
+map_Kd wooddar2.bmp
+
+newmtl Object3 网格_woodlight2
+illum 2
+Ka 0.000000 0.000000 0.000000
+Kd 0.646162 0.565369 0.434441
+Ks 0.623529 0.639216 0.560784
+Ns 37.007099
+map_Kd woodlig2.bmp
+
+newmtl PEDONE12 网格_wooddark0
+illum 2
+Ka 0.000000 0.000000 0.000000
+Kd 0.161551 0.041366 0.002207
+Ks 0.623529 0.639216 0.560784
+Ns 4.737720
+map_Kd wooddar0.bmp
+
+newmtl PEDONE13 网格_woodlight0
+illum 2
+Ka 0.000000 0.000000 0.000000
+Kd 0.646162 0.565369 0.434441
+Ks 0.623529 0.639216 0.560784
+Ns 37.007099
+map_Kd woodlig0.bmp
+
+newmtl RE01 网格_wooddark5
+illum 2
+Ka 0.000000 0.000000 0.000000
+Kd 0.161551 0.041366 0.002207
+Ks 0.623529 0.639216 0.560784
+Ns 4.737720
+map_Kd wooddar5.bmp
+
+newmtl RE2 网格_woodlight5
+illum 2
+Ka 0.000000 0.000000 0.000000
+Kd 0.646162 0.565369 0.434441
+Ks 0.623529 0.639216 0.560784
+Ns 37.007099
+map_Kd woodlig5.bmp
+
+newmtl REGINA01 网格_wooddark4
+illum 2
+Ka 0.000000 0.000000 0.000000
+Kd 0.161551 0.041366 0.002207
+Ks 0.623529 0.639216 0.560784
+Ns 4.737720
+map_Kd wooddar4.bmp
+
+newmtl REGINA2 网格_woodlight4
+illum 2
+Ka 0.000000 0.000000 0.000000
+Kd 0.646162 0.565369 0.434441
+Ks 0.623529 0.639216 0.560784
+Ns 37.007099
+map_Kd woodlig4.bmp
+
+newmtl TORRE02 网格_wooddark1
+illum 2
+Ka 0.000000 0.000000 0.000000
+Kd 0.161551 0.041366 0.002207
+Ks 0.623529 0.639216 0.560784
+Ns 4.737720
+map_Kd wooddar1.bmp
+
+newmtl TORRE3 网格_woodlight1
+illum 2
+Ka 0.000000 0.000000 0.000000
+Kd 0.646162 0.565369 0.434441
+Ks 0.623529 0.639216 0.560784
+Ns 37.007099
+map_Kd woodlig1.bmp
+
