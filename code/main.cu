@@ -1,3 +1,12 @@
+/* 
+Author: Rui Wang 
+Class: ECE6122 
+Last Date Modified: Nov 3rd 2024
+Description: 
+The main function is here. There a update grid kernel function, a arguments parse function drawGrid function, 
+and three types of memory transfer functions: normal, pinned and managed memory transfer.
+*/
+
 #include <SFML/Graphics.hpp>
 #include <cuda_runtime.h>
 #include <iostream>
@@ -40,7 +49,7 @@ inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=
 }
 
 // Update 1-D Grid
-__global__ void updateSingleGridKernelWithHalo(int* grid, int* newGrid, int columnLength, int rowLength) {
+__global__ void updateGridKernel(int* grid, int* newGrid, int columnLength, int rowLength) {
     // Calculate the global 1D index for the current thread
     int globalIndex = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -202,7 +211,7 @@ void normalMemory(sf::RenderWindow& window) {
         cudaCheckError(cudaEventRecord(start, stream1));
 
         // Launch the kernel using stream1
-        updateSingleGridKernelWithHalo<<<numBlocks, numThreadPerBlock, 0, stream1>>>(d_grid_current, d_grid_next, columnLength, rowLength);
+        updateGridKernel<<<numBlocks, numThreadPerBlock, 0, stream1>>>(d_grid_current, d_grid_next, columnLength, rowLength);
 
         // Asynchronously copy the result back to host memory using stream2
         cudaCheckError(cudaMemcpyAsync(hostGrid.data(), d_grid_current, columnLength * rowLength * sizeof(int), cudaMemcpyDeviceToHost, stream2));
@@ -280,7 +289,7 @@ void pinnedMemory(sf::RenderWindow& window) {
         cudaCheckError(cudaEventRecord(start, stream1));
 
         // Launch the kernel using stream1
-        updateSingleGridKernelWithHalo<<<numBlocks, numThreadPerBlock, 0, stream1>>>(d_grid_current, d_grid_next, columnLength, rowLength);
+        updateGridKernel<<<numBlocks, numThreadPerBlock, 0, stream1>>>(d_grid_current, d_grid_next, columnLength, rowLength);
 
         // Asynchronously copy the result back to pinned host memory using stream2
         cudaCheckError(cudaMemcpyAsync(pinnedHostGrid, d_grid_current, columnLength * rowLength * sizeof(int), cudaMemcpyDeviceToHost, stream2));
@@ -349,7 +358,7 @@ void managedMemory(sf::RenderWindow& window) {
         cudaCheckError(cudaEventRecord(start, 0));
 
         // Launch the kernel using the default stream
-        updateSingleGridKernelWithHalo<<<numBlocks, numThreadPerBlock>>>(d_grid_current, d_grid_next, columnLength, rowLength);
+        updateGridKernel<<<numBlocks, numThreadPerBlock>>>(d_grid_current, d_grid_next, columnLength, rowLength);
 
         // Synchronize to ensure kernel execution is complete
         cudaCheckError(cudaDeviceSynchronize());
