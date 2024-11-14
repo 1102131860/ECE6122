@@ -9,3 +9,8 @@
 * By the way, this Lab may only ask to update the robot's position when a new command packet received from client. In the future, one improvement is that make the move and change direction separately. The robot will continue moving and change its direction when a command received from client. To do that, there are serveral ways can implement here. But so far, I can come up with two main methods.
     1. use ***non-block socket*** to receive message and only updates the direction when receive a command. This will be relatively easy as it is done in single thread.
     2. use ***OpenMP or threads*** to implement parallelism. This may be more challenging as it needs some atomic or mutex function to avoid data race or memory competition. 
+
+### Nov 14th, 2024
+* Use unblock socket to solve the bug of closing window for UCPServer. The task that inform the client that sever is about to close is done as well.
+* Change the boundary checking for robot and make it fixed when it touches the boundary and still move outside the area.
+* __Still need an image for the robot and rotating the image as the robot's direction changes__
