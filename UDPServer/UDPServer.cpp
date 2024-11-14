@@ -69,17 +69,27 @@ private:
     // Move robot
     void move() {
         sf::Vector2f position = usingTexture ? this->getPosition() : circleShape.getPosition();
+        sf::Vector2f distance = sf::Vector2f(velocity.x * speed, velocity.y * speed);            
+        sf::Vector2f nextPosition = position + distance;     // the next move position should be inside
 
-        if ((position.x <= 0 && velocity.x < 0) || (position.x + DIAMETER >= WINDOW_WIDTH && velocity.x > 0))   // collides with left or right edge
-            velocity.x = -velocity.x; // inverse x-axis velocity
-        
-        if ((position.y <= 0 && velocity.y < 0) || (position.y + DIAMETER >= WINDOW_HEIGHT && velocity.y > 0))  // collides with up or down edge
-            velocity.y = -velocity.y; // inverse y-axis velocity
+        // Check and handle boundary collisions
+        if (nextPosition.x <= 0 && velocity.x < 0) {
+            nextPosition.x = DIAMETER;     // remain at the left edge
+        }
+        if (nextPosition.x + DIAMETER >= WINDOW_WIDTH && velocity.x > 0) {
+            nextPosition.x = WINDOW_WIDTH - DIAMETER;     // remain at the right edge
+        }
+        if (nextPosition.y <= 0 && velocity.y < 0) {
+            nextPosition.y = DIAMETER;     // remain at the upper edge
+        }
+        if (nextPosition.y + DIAMETER >= WINDOW_HEIGHT && velocity.y > 0) {
+            nextPosition.y = WINDOW_HEIGHT - DIAMETER;  // remain at the lower edge
+        }
 
         if (usingTexture) {
-            sf::Sprite::move(velocity.x * speed, velocity.y * speed);   // use the father class's move
+            sf::Sprite::setPosition(nextPosition);   // use the father class's move
         } else {
-            circleShape.move(velocity.x * speed, velocity.y * speed);
+            circleShape.setPosition(nextPosition);
         }
     }
 
@@ -128,7 +138,7 @@ int main(int argc, char* argv[])
         return 1;
     std::cout << "Connected to client: " << client << " on port " << clientPort << "\nReceived Message (" << received << " bytes): " << in << std::endl;
     
-    // Close initial socket
+    // Close initial socket (default port not user-define port)
     initialSocket.unbind();
 
     // After receving the initial message from client, draw the robot at the center of window
@@ -162,48 +172,64 @@ int main(int argc, char* argv[])
     if (socket.send(greeting.c_str(), greeting.size() + 1, client, clientPort) != sf::Socket::Status::Done)
         return 1;
 
+    // Set the socket to non-blocking mode (to make the receiving not blocked)
+    socket.setBlocking(false);
+
+    // Check whether window is closed
+    bool windowIsClosed = false;
+
+    // Main loop
     while (true) {
+        // Poll for window events
         sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
+            if (event.type == sf::Event::Closed) {
                 window.close();
+                windowIsClosed = true;
+            }
         }
         // If press esc, window exits
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) 
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
             window.close();
+            windowIsClosed = true;
+        }
 
-        // clear receive buffer
-        std::memset(in, 0, sizeof(in));                    
-
-        // Wait for a message
-        if (socket.receive(in, sizeof(in), received, client, clientPort) != sf::Socket::Status::Done)
-            return 1;
-        std::string cmd(in);                // convert char array in into string message
-        std::cout << "Received command from client: " << cmd << std::endl;
-
-        // Send an answer to the client
-        std::string response = "Server received: " + cmd;
-        if (socket.send(response.c_str(), response.size() + 1, client, clientPort) != sf::Socket::Status::Done)
-            return 1;
-
-        // Judge whether the client quits or not
-        if (cmd == "quit") {
-            window.clear(sf::Color::Black);
-            window.display();
-            std::cout << "Received 'quit' command. Client exist ..." << std::endl;
+        // Tell client that server terminates
+        if (windowIsClosed) {
+            std::cout << "Server terminates ..." << std::endl;
             break;
         }
 
-        // Update the robot position
-        robot.update(cmd);
+        // Try to receive a message
+        std::memset(in, 0, sizeof(in));                    
+        if (socket.receive(in, sizeof(in), received, client, clientPort) == sf::Socket::Status::Done) {
+            std::string cmd(in);  // Convert char array to string message
+            std::cout << "Received command from client: " << cmd << std::endl;
 
-        // Draw robot
-        window.clear(sf::Color::Black);
-        robot.draw(window);
-        window.display();
+            // Send confirmation of receiving to the client
+            std::string response = "Server received: " + cmd;
+            if (socket.send(response.c_str(), response.size() + 1, client, clientPort) != sf::Socket::Status::Done) 
+                return 1;
+
+            // Update the robot position
+            robot.update(cmd);
+
+            // Draw robot
+            window.clear(sf::Color::Black);
+            robot.draw(window);
+            window.display();
+
+            // Judge whether the client quits or not
+            if (cmd == "Quit") {
+                window.clear(sf::Color::Black);
+                window.display();
+                std::cout << "Client quits ..." << std::endl;
+                break;
+            }
+        }
+
     }
-   
-    // Wait until the user presses 'enter' key
+
     std::cout << "Press enter to exit..." << std::endl;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
