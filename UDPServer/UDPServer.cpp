@@ -7,6 +7,7 @@ This is the main function that implements UDP connection at the server terminal.
 */
 
 #include <SFML/Network.hpp>
+#include <cstring>
 #include "Robot.h"
 
 int main(int argc, char* argv[])
@@ -108,7 +109,7 @@ int main(int argc, char* argv[])
         window.display();
 
         // Try to receive a message
-        std::memset(in, 0, sizeof(in));                    
+        memset(in, 0, sizeof(in));                    
         if (socket.receive(in, sizeof(in), received, client, clientPort) == sf::Socket::Status::Done) {
             std::string cmd(in);  // Convert char array to string message
             std::cout << "Received command from client: " << cmd << std::endl;
@@ -129,7 +130,7 @@ int main(int argc, char* argv[])
     }
 
     std::cout << "Press enter to exit..." << std::endl;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.ignore(10000, '\n');
 
     return 0;
 }

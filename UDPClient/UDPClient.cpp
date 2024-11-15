@@ -7,6 +7,7 @@ This is the main function that implements the UDP connection at the client termi
 */
 
 #include <SFML/Network.hpp>
+#include <cstring>
 #include <iostream>
 
 #define UDP_SERVER_PORT 61000
@@ -19,7 +20,7 @@ int main(int argc, char* argv[])
     {
         std::cout << "Type the address or name of the server to connect to: ";
         std::cin >> server;
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cin.ignore(10000, '\n');
     } while (server == sf::IpAddress::None);
 
     // Create a socket for communicating with the server
@@ -61,7 +62,7 @@ int main(int argc, char* argv[])
             return 1;
 
         // Set the socket as the block mode (to make the receiving blocked)
-        std::memset(in, 0, sizeof(in));
+        memset(in, 0, sizeof(in));
         if (socket.receive(in, sizeof(in), received, server, serverPort) == sf::Socket::Status::Done) {
             std::cout << "Message received from the server: " << in << std::endl;
         } else {
@@ -71,7 +72,7 @@ int main(int argc, char* argv[])
     }
 
     std::cout << "Press enter to exit..." << std::endl;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.ignore(10000, '\n');
 
     return 0;
 }

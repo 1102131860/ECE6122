@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # set(OPENAL_LIBRARY ${PROJECT_SOURCE_DIR}/../SFML/extlibs/libs-msvc/x64/openal32.lib) # for open Ardio dll
 
 set(SOURCE 
-    ${PROJECT_SOURCE_DIR}/config.h
+    ${PROJECT_SOURCE_DIR}/Config.h
     ${PROJECT_SOURCE_DIR}/Robot.h
     ${PROJECT_SOURCE_DIR}/Robot.cpp
     ${PROJECT_SOURCE_DIR}/UDPServer.cpp
