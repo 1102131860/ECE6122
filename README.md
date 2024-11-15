@@ -13,4 +13,4 @@
 ### Nov 14th, 2024
 * Use unblock socket to solve the bug of closing window for UCPServer. The task that inform the client that sever is about to close is done as well.
 * Change the boundary checking for robot and make it fixed when it touches the boundary and still move outside the area.
-* __Still need an image for the robot and rotating the image as the robot's direction changes__
+* __There is a bug where if the server terminates firstly, then the client may enter dead lock. This may due to the socket.send() method.__

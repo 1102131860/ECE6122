@@ -1,8 +1,13 @@
+/*
+Author: Rui Wang
+Class: ECE6122
+Last Date Modified: Nov 19th, 2024
+Description:
+This is the main function that implements the UDP connection at the client terminal.
+*/
 
 #include <SFML/Network.hpp>
 #include <iostream>
-#include <string>
-#include <thread>
 
 #define UDP_SERVER_PORT 61000
 
@@ -39,7 +44,7 @@ int main(int argc, char* argv[])
     while (true) {
         // Obtain input from user
         std::string input;
-        std::cout << "Please choose one operation from (w: move up; s: move down; a: move left, d: move right, g: speed up, h: slow down): ";
+        std::cout << "w: move up; s: move down; a: move left; d: move right; g: speed up; h: slow down\nChoose one operation: ";
         std::getline(std::cin, input);
 
         // Judge client input "q"
@@ -52,10 +57,10 @@ int main(int argc, char* argv[])
         }
 
         // Send a message to the server
-        if (socket.send(input.c_str(), input.size() + 1, server, serverPort) != sf::Socket::Status::Done) 
+        if (socket.send(input.c_str(), input.size() + 1, server, serverPort) != sf::Socket::Status::Done)
             return 1;
 
-        // Receive a message from the server
+        // Set the socket as the block mode (to make the receiving blocked)
         std::memset(in, 0, sizeof(in));
         if (socket.receive(in, sizeof(in), received, server, serverPort) == sf::Socket::Status::Done) {
             std::cout << "Message received from the server: " << in << std::endl;
