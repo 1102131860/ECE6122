@@ -1,3 +1,12 @@
+/* 
+Author: Rui Wang
+Class: ECE6122 
+Last Date Modified: Nov 17th, 2024
+
+Description:
+Use OpenMPI to estimate the value of a Definite Integral using the Monte Carlo method
+*/
+
 #include "mpi.h"
 #include <iostream>
 #include <ctime>
