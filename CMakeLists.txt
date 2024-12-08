@@ -29,8 +29,6 @@ set_target_properties(
     VS_DEBUGGER_WORKING_DIRECTORY "${COMMON_OUTPUT_DIR}/bin"
 )
 
-# message(STATUS "COMMON_OUTPUT_DIR is: ${COMMON_OUTPUT_DIR}")
-
 # Copy DLLs using file(COPY ...)
 file(COPY ${PROJECT_SOURCE_DIR}/../SFML/extlibs/bin/x64/openal32.dll
      DESTINATION "${COMMON_OUTPUT_DIR}/bin")
