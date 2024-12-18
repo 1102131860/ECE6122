@@ -1,4 +1,4 @@
-# ECE 6122 Advanced Programming Techniques Labs and Projects
+# ECE 6122 Advanced Programming Techniques
 
 ## General Explanation
 - There are 6 labs and 1 final project in this session. 
