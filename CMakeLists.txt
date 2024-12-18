@@ -21,9 +21,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 add_subdirectory(SFML)
 add_subdirectory(Lab1)
-add_subdirectory(Lab2)
+# add_subdirectory(Lab2)
 # add_subdirectory(Lab4) # if configured with CUDA, then uncomment it
-add_subdirectory(Lab5)
+# add_subdirectory(Lab5)
 # Include header files
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
