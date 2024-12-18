@@ -1,0 +1,43 @@
+# Ingore all the files and folders
+*
+
+# Except the README.md
+!README.md
+
+# Except the CMakeLists.txt
+!CMakeLists.txt
+
+# Except the Lab1 folder
+!Lab1/
+# Except the Lab1 pdf
+!Lab1/Lab1.pdf
+
+# Except the Lab2 folder
+!Lab2/
+# Except the Lab2 pdf
+!Lab2/Lab2.pdf
+
+# Except the Lab3 folder
+!Lab3/
+# Except the Lab3 pdf
+!Lab3/Lab3.pdf
+
+# Except the Lab4 folder
+!Lab4/
+# Except the Lab4 pdf
+!Lab4/Lab4.pdf
+
+# Except the Lab5 folder
+!Lab5/
+# Except the Lab5 pdf
+!Lab5/Lab5.pdf
+
+# Except the Lab6 folder
+!Lab6/
+# Except the Lab6 pdf
+!Lab6/Lab6.pdf
+
+# Except the Final_Project folder
+!Final_Project/
+# Except the Lab1 pdf
+!Final_Project/Final Project.pdf
